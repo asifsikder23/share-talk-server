@@ -21,6 +21,7 @@ async function run(){
     console.log("database connected");
     const usersCollection = client.db('shareTalk').collection('users')
     const postsCollection = client.db('shareTalk').collection('posts')
+    const commentCollection = client.db('shareTalk').collection('comment')
 
     // jwt
     app.get("/jwt", async (req, res) => {
@@ -49,18 +50,54 @@ async function run(){
         const result = await usersCollection.find(query).toArray();
         res.send(result);
       });
+      app.get("/user/:id", async (req, res) => {
+        const id = req.params.id;
+        console.log(id);
+        const query = { _id: ObjectId(id) };
+        const result = await usersCollection.findOne(query);
+        res.send(result);
+      });
+      app.get("/editProfile/:id", async (req, res) => {
+        const id = req.params.id;
+        console.log(id);
+        const query = { _id: ObjectId(id) };
+        const result = await usersCollection.findOne(query);
+        res.send(result);
+      });
       app.get("/user", async (req, res) => {
         const email = req.query.email;
-        console.log(email);
         const query = { email:email };
         const result = await usersCollection.findOne(query)
         res.send(result);
       }); 
 
+      // update
+
+      app.put('/users/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: ObjectId(id) };
+        const user = req.body;
+        const option = {upsert: true};
+        const updatedUser = {
+            $set: {
+                name: user.name,
+                institute: user.institute,
+                address: user.address,
+                birthdate: user.birthdate,
+                gender: user.gender,
+                description: user.description,
+                coverImg: user.coverImg,
+                photo: user.photo
+            }
+        }
+        const result = await usersCollection.updateOne(filter, updatedUser, option);
+        res.send(result);
+      })
+
       // post
       app.post("/posts", async (req, res) => {
         const user = req.body;
-        console.log(user);
+        
         const result = await postsCollection.insertOne(user);
         res.send(result);
       });
@@ -71,14 +108,13 @@ async function run(){
       });
       app.get("/posts/:id", async (req, res) => {
         const id = req.params.id;
-        console.log(id);
+      
         const query = { _id: ObjectId(id) };
         const result = await postsCollection.findOne(query);
         res.send(result);
       });
       app.get("/post", async (req, res) => {
         const email = req.query.email;
-        console.log(email);
         const query = { email: email };
         const result = await postsCollection.find(query).toArray();
         res.send(result);
@@ -97,6 +133,24 @@ async function run(){
         const result = await postsCollection.updateOne(filter, updateDoc, options);
         res.send(result);
       })
+
+      // comment
+      app.post('/comment', async(req, res)=>{
+        const query = req.body
+        const result = await commentCollection.insertOne(query);
+        res.send(result)
+      })
+      app.get('/comment', async(req, res)=>{
+        const query = req.body
+        const result = await commentCollection.find(query).toArray();
+        res.send(result)
+      })
+      app.get("/comment/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = await commentCollection.findOne(query);
+        res.send(result);
+      });
 }
 run().catch(console.log);
 
